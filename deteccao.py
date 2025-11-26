@@ -1,0 +1,33 @@
+import cv2
+import numpy as np
+
+imagem = cv2.imread('assets/13_frame_000001_t1.50s.jpg')
+
+hsv = cv2.cvtColor(imagem, cv2.COLOR_BGR2HSV)
+
+minimo = np.array([112, 229, 212])
+maximo = np.array([150, 255, 255])
+
+mascara = cv2.inRange(hsv, minimo, maximo)
+
+# Limpeza Morfologia
+# Cria um "pincel" 5x5 pixels
+kernel = np.ones((5,5), np.uint8)
+
+# Erode: suaviza as bordas 
+mascara = cv2.erode(mascara, kernel, iterations=1)
+# Dilate: "Incha" a forma para tapar buracos dentro dela
+mascara = cv2.dilate(mascara, kernel, iterations=1)
+
+# RETR_EXTERNAL: Pega apenas o contorno de fora 
+# CHAIN_APPROX_SIMPLE: guarda apenas os pontos essenciais da linha
+contornos, _ = cv2.findContours(mascara, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+cv2.drawContours(imagem, contornos, -1, (0, 255, 0), 3)
+
+# Mostra o resultado final
+cv2.imshow('Mascara Limpa', mascara)
+cv2.imshow('Contorno Detectado', imagem)
+
+cv2.waitKey(0)
+cv2.destroyAllWindows()
