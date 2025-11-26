@@ -8,7 +8,13 @@ hsv = cv2.cvtColor(imagem, cv2.COLOR_BGR2HSV)
 # Estrutura: ("Nome", [min H,S,V], [max H,S,V])
 lista_cores = [
     ("Circulo Azul", [112, 229, 212], [150, 255, 255]),
-    ("Quadrado Roxo", [124, 162, 42], [161, 233, 118])
+    ("Pentagono Roxo", [124, 162, 42], [161, 255, 144]),
+    ("Cruz Rosa", [124, 212, 151], [155, 255, 212]),
+    ("Triangulo Azul", [107, 222, 113], [130, 255, 213])
+
+    
+
+
 ]
 
 for nome_cor, valor_min, valor_max in lista_cores:

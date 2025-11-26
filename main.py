@@ -38,7 +38,6 @@ while True:
     
     mascara = cv2.inRange(hsv, minimo, maximo)
 
-    cv2.imshow('Minha Imagem', imagem)
     cv2.imshow('Mascara', mascara)
 
     # Q para sair do loop
