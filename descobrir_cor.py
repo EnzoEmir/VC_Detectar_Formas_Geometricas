@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 
 imagem = cv2.imread('assets/13_frame_000001_t1.50s.jpg')
+#imagem = cv2.imread('assets/13_frame_000004_t6.00s.jpg')
 
 bbox = cv2.selectROI("Selecione a Cor", imagem, showCrosshair=True)
 cv2.destroyWindow("Selecione a Cor")
