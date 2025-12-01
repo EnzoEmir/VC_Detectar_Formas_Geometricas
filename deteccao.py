@@ -17,8 +17,6 @@ lista_cores = [
     ("Quadrado Azul", [101, 212, 56], [122, 255, 111]),
     ("Hexagono Rosa", [147, 180, 104], [179, 255, 199])
 
-
-
 ]
 
 for nome_cor, valor_min, valor_max in lista_cores:

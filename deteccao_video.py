@@ -7,17 +7,20 @@ video = cv2.VideoCapture(video)
 # Estrutura: ("Nome", [min H,S,V], [max H,S,V])
 lista_cores = [
     ("Circulo Azul", [100, 90, 180], [140, 180, 230]),
-    # ("Pentagono Roxo", [124, 162, 42], [161, 255, 144]),
-    # ("Cruz Rosa", [124, 212, 151], [155, 255, 212]),
-    # ("Triangulo Azul", [107, 222, 113], [130, 255, 213]),
-    # ("Castelo Laranja", [150, 0, 130], [179, 194, 255]),
-    # ("Estrela Verde", [66, 220, 0], [104, 255, 215]),
-    # ("Quadrado Azul", [101, 212, 56], [122, 255, 111]),
-    # ("Hexagono Rosa", [147, 180, 104], [179, 255, 199])
+    ("Quadrado Marrom", [115, 25, 85], [145, 90, 150]), 
+    ("Pentagono Roxo", [158, 92, 150], [179, 255, 225]),
+    ("Cruz Rosa", [140, 70, 160], [158, 180, 255]),
+    ("Triangulo Azul", [100, 30, 130], [120, 110, 190]),
+    ("Castelo Laranja", [165, 30, 130], [179, 200, 255]), # Esta instavel, mas nâo consegui melhorar
+    ("Estrela Verde", [45, 25, 150], [90, 90, 215]),
+   ("Hexagono Vermelho", [0, 120, 160], [10, 255, 255]) # Como não tem no vídeo, somente uma estimativa
 ]
 
 def detectar_formas(imagem):
-    hsv = cv2.cvtColor(imagem, cv2.COLOR_BGR2HSV)
+    # Aplica blur para reduzir ruído(se estiver pesado pode trocar pro GaussianBlur)
+    imagem_blur = cv2.medianBlur(imagem, 5)
+    
+    hsv = cv2.cvtColor(imagem_blur, cv2.COLOR_BGR2HSV)
     imagem_resultado = imagem.copy()
     
     for nome_cor, valor_min, valor_max in lista_cores:
@@ -26,16 +29,19 @@ def detectar_formas(imagem):
 
         mascara = cv2.inRange(hsv, minimo, maximo)
 
-        kernel = np.ones((5,5), np.uint8)
-        mascara = cv2.erode(mascara, kernel, iterations=1)
-        mascara = cv2.dilate(mascara, kernel, iterations=1)
+        kernel = np.ones((5, 5), np.uint8)
+        # Melhor que o Erode e Dilate pq "limpa" dentro da figura
+        mascara = cv2.morphologyEx(mascara, cv2.MORPH_OPEN, kernel)
+        mascara = cv2.morphologyEx(mascara, cv2.MORPH_CLOSE, kernel)
+        
+        mascara = cv2.medianBlur(mascara, 5)
 
         # Encontra contornos
         contornos, _ = cv2.findContours(mascara, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         for cnt in contornos:
             area = cv2.contourArea(cnt)
-            if area > 1000:  # Área maior que 1000 pixels
+            if area > 800:  # Diminui a área pra conseguir pegar a Estrela em alguns casos(Caso diminuir mais pode acabar pegando ruido)
                 perimetro = cv2.arcLength(cnt, True)
                 approx = cv2.approxPolyDP(cnt, 0.015 * perimetro, True)
                 num_vertices = len(approx)
@@ -99,6 +105,10 @@ def detectar_formas(imagem):
 
 while True:
     ret, frame = video.read() 
+    
+    if not ret:
+        video.set(cv2.CAP_PROP_POS_FRAMES, 0)
+        continue
 
     frame_processado = detectar_formas(frame)
     
@@ -109,4 +119,3 @@ while True:
 
 video.release()
 cv2.destroyAllWindows()
-print("Programa encerrado.")
