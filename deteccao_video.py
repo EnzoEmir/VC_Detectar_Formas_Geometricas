@@ -50,11 +50,11 @@ def detectar_formas(imagem):
                 forma = "Desconhecido"
                 
                 # Classificação das formas
-                if "Circulo" in nome_cor and num_vertices == 6 and circularidade > 0.4:
+                if "Circulo" in nome_cor and 5 <= num_vertices <= 10 and circularidade > 0.4:
                     forma = "Circulo"
-                elif "Cruz" in nome_cor and num_vertices == 12 and circularidade < 0.25:
+                elif "Cruz" in nome_cor and 10 <= num_vertices <= 14 :
                     forma = "Cruz"
-                elif "Estrela" in nome_cor and num_vertices == 11 and circularidade < 0.4:
+                elif "Estrela" in nome_cor and 9 <= num_vertices <= 13:
                     forma = "Estrela"
                 elif "Triangulo" in nome_cor and num_vertices == 3:
                     forma = "Triangulo"
@@ -62,9 +62,9 @@ def detectar_formas(imagem):
                     forma = "Quadrado"
                 elif "Pentagono" in nome_cor and num_vertices == 5:
                     forma = "Pentagono"
-                elif "Hexagono" in nome_cor and num_vertices == 6 and circularidade > 0.8:
+                elif "Hexagono" in nome_cor and 5 <= num_vertices <= 7:
                     forma = "Hexagono"
-                elif "Castelo" in nome_cor and num_vertices == 10:
+                elif "Castelo" in nome_cor and 8 <= num_vertices <= 12:
                     forma = "Castelo"
                 # Fallback para detecção por cor
                 elif "Circulo" in nome_cor:
