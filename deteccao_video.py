@@ -1,70 +1,58 @@
 import cv2
 import numpy as np
+from config import *
 
-video = 'assets/video_desafio_1.mp4'
-video = cv2.VideoCapture(video)
-
-# Estrutura: ("Nome", [min H,S,V], [max H,S,V])
-lista_cores = [
-    ("Circulo Azul", [100, 90, 180], [140, 180, 230]),
-    ("Quadrado Marrom", [115, 25, 85], [145, 90, 150]), 
-    ("Pentagono Roxo", [158, 92, 150], [179, 255, 225]),
-    ("Cruz Rosa", [140, 70, 160], [158, 180, 255]),
-    ("Triangulo Azul", [100, 30, 130], [120, 110, 190]),
-    ("Castelo Laranja", [165, 30, 130], [179, 200, 255]), # Esta instavel, mas nâo consegui melhorar
-    ("Estrela Verde", [45, 25, 150], [90, 90, 215]),
-   ("Hexagono Vermelho", [0, 120, 160], [10, 255, 255]) # Como não tem no vídeo, somente uma estimativa
-]
+video = cv2.VideoCapture(VIDEO_PATH)
 
 def detectar_formas(imagem):
-    # Aplica blur para reduzir ruído(se estiver pesado pode trocar pro GaussianBlur)
-    imagem_blur = cv2.medianBlur(imagem, 5)
+    # Aplica blur para reduzir ruído
+    imagem_blur = cv2.medianBlur(imagem, MEDIAN_BLUR_KERNEL)
     
     hsv = cv2.cvtColor(imagem_blur, cv2.COLOR_BGR2HSV)
     imagem_resultado = imagem.copy()
     
-    for nome_cor, valor_min, valor_max in lista_cores:
+    for nome_cor, valor_min, valor_max in LISTA_CORES:
         minimo = np.array(valor_min)
         maximo = np.array(valor_max)
 
         mascara = cv2.inRange(hsv, minimo, maximo)
 
-        kernel = np.ones((5, 5), np.uint8)
+        kernel = np.ones(MORPHOLOGY_KERNEL_SIZE, np.uint8)
         # Melhor que o Erode e Dilate pq "limpa" dentro da figura
         mascara = cv2.morphologyEx(mascara, cv2.MORPH_OPEN, kernel)
         mascara = cv2.morphologyEx(mascara, cv2.MORPH_CLOSE, kernel)
         
-        mascara = cv2.medianBlur(mascara, 5)
+        mascara = cv2.medianBlur(mascara, MEDIAN_BLUR_KERNEL)
 
         # Encontra contornos
         contornos, _ = cv2.findContours(mascara, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         for cnt in contornos:
             area = cv2.contourArea(cnt)
-            if area > 800:  # Diminui a área pra conseguir pegar a Estrela em alguns casos(Caso diminuir mais pode acabar pegando ruido)
+            if area > AREA_MINIMA:
                 perimetro = cv2.arcLength(cnt, True)
-                approx = cv2.approxPolyDP(cnt, 0.015 * perimetro, True)
+                approx = cv2.approxPolyDP(cnt, APPROX_POLY_FACTOR * perimetro, True)
                 num_vertices = len(approx)
                 circularidade = 4 * np.pi * area / (perimetro * perimetro)
                 
                 forma = "Desconhecido"
                 
-                # Classificação das formas
-                if "Circulo" in nome_cor and 5 <= num_vertices <= 10 and circularidade > 0.4:
+                # Classificação das formas baseada em vértices e circularidade
+                if "Circulo" in nome_cor and VERTICES_CIRCULO[0] <= num_vertices <= VERTICES_CIRCULO[1] and circularidade > CIRCULARIDADE_MINIMA_CIRCULO:
                     forma = "Circulo"
-                elif "Cruz" in nome_cor and 10 <= num_vertices <= 14 :
+                elif "Cruz" in nome_cor and VERTICES_CRUZ[0] <= num_vertices <= VERTICES_CRUZ[1]:
                     forma = "Cruz"
-                elif "Estrela" in nome_cor and 9 <= num_vertices <= 13:
+                elif "Estrela" in nome_cor and VERTICES_ESTRELA[0] <= num_vertices <= VERTICES_ESTRELA[1]:
                     forma = "Estrela"
-                elif "Triangulo" in nome_cor and num_vertices == 3:
+                elif "Triangulo" in nome_cor and VERTICES_TRIANGULO[0] <= num_vertices <= VERTICES_TRIANGULO[1]:
                     forma = "Triangulo"
-                elif "Quadrado" in nome_cor and num_vertices == 4:
+                elif "Quadrado" in nome_cor and VERTICES_QUADRADO[0] <= num_vertices <= VERTICES_QUADRADO[1]:
                     forma = "Quadrado"
-                elif "Pentagono" in nome_cor and num_vertices == 5:
+                elif "Pentagono" in nome_cor and VERTICES_PENTAGONO[0] <= num_vertices <= VERTICES_PENTAGONO[1]:
                     forma = "Pentagono"
-                elif "Hexagono" in nome_cor and 5 <= num_vertices <= 7:
+                elif "Hexagono" in nome_cor and VERTICES_HEXAGONO[0] <= num_vertices <= VERTICES_HEXAGONO[1]:
                     forma = "Hexagono"
-                elif "Castelo" in nome_cor and 8 <= num_vertices <= 12:
+                elif "Castelo" in nome_cor and VERTICES_CASTELO[0] <= num_vertices <= VERTICES_CASTELO[1]:
                     forma = "Castelo"
                 # Fallback para detecção por cor
                 elif "Circulo" in nome_cor:
@@ -95,10 +83,10 @@ def detectar_formas(imagem):
                     cX, cY = 0, 0
                 
                 # Desenha o contorno e o texto
-                cv2.drawContours(imagem_resultado, [cnt], -1, (0, 255, 0), 2)
+                cv2.drawContours(imagem_resultado, [cnt], -1, COR_CONTORNO, ESPESSURA_CONTORNO)
                 texto_final = f"{forma}"
-                cv2.putText(imagem_resultado, texto_final, (cX - 20, cY), 
-                           cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+                cv2.putText(imagem_resultado, texto_final, (cX + OFFSET_TEXTO_X, cY + OFFSET_TEXTO_Y), 
+                           cv2.FONT_HERSHEY_SIMPLEX, TAMANHO_FONTE, COR_TEXTO, ESPESSURA_TEXTO)
     
     return imagem_resultado
 
@@ -114,7 +102,7 @@ while True:
     
     cv2.imshow('Deteccao de Formas Geometricas - Video', frame_processado)
     
-    if cv2.waitKey(60) & 0xFF == ord('q'):
+    if cv2.waitKey(FRAME_DELAY) & 0xFF == ord(TECLA_SAIR):
         break
 
 video.release()
